@@ -1,0 +1,12 @@
+.<%= className %> {
+
+}
+
+<% if (modifiers) { %>
+/**
+ * Modifiers
+ */
+<% modifiers.forEach(function(modifier){ %>
+.<%= className %>--<%= modifier %> {
+
+}<% }); %><% } %>

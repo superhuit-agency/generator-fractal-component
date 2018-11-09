@@ -17,13 +17,19 @@ npm install --save-dev generator-fractal-comp
 Create a `.yo-rc.json` file in the root of your project and set all the values according to your needs
 
 ```json
-{
-  "generator-fractal-component": {
-    "componentsPath": "./styleguide/components",
+"generator-fractal-component": {
+    "componentsPath": "./theme/styleguide/components",
     "prefixComponents": false,
     "updateLoaderCMD": {
       "cmd": "yarn",
-      "args": ["fractal", "generate:sass"]
+      "args": [
+        "fractal",
+        "generate:sass"
+      ]
+    },
+    "updateIndexJsCMD": {
+      "cmd": "node",
+      "cliPath": "./cli/updateJsIndex.js"
     },
     "componentTypes": [
       {
@@ -48,7 +54,6 @@ Create a `.yo-rc.json` file in the root of your project and set all the values a
       }
     ]
   }
-}
 ```
 ## Run the generator
 

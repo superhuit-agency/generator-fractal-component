@@ -1,5 +1,5 @@
 .<%= className %> {
-
+	/* styles */
 }
 
 <% if (modifiers) { %>
@@ -8,5 +8,5 @@
  */
 <% modifiers.forEach(function(modifier){ %>
 .<%= className %>--<%= modifier %> {
-
+	/* styles */
 }<% }); %><% } %>

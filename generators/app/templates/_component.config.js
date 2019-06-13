@@ -12,13 +12,13 @@ module.exports = {
 	},
 	context: {
 		modifiers: [],
-		html_attrs: [],
+		html_attrs: {},
 	},<% if (modifiers) { %>
 	variants: [<% modifiers.forEach(function(modifier, index, array){ %><%= index === 0 ? '\n		{' : '	{' %>
 			name: '<%= modifier %>',
 			context: {
 				modifiers: ['<%= className %>--<%= modifier %>'],
-				html_attrs: [],
+				html_attrs: {},
 			},
 		},
 	<%}); %>],<% } %>

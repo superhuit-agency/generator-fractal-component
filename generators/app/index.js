@@ -8,26 +8,6 @@ const selectDirectory = require('inquirer-select-directory');
 var shell = require('shelljs');
 const humorize = require('./lib/humorize.js');
 
-const templateOptions = [{
-		name: 'twig',
-		checked: true
-	},
-	{
-		name: 'scss',
-		checked: true
-	},
-	{
-		name: 'config',
-		checked: true
-	},
-	{
-		name: 'js'
-	},
-	{
-		name: 'readme'
-	}
-];
-
 module.exports = class extends Generator {
 	constructor(args, opts) {
 		super(args, opts);
@@ -46,19 +26,13 @@ module.exports = class extends Generator {
 		}
 
 		this.componentSettings = {
-			path: this.config.get('componentsPath'),
+			path: this.config.get('componentsDest'),
 			types: Object.keys(this.config.get('componentTypes')).map(
 				object => this.config.get('componentTypes')[object]
 			),
 			usePrefix: this.config.get('prefixComponents'),
-			updateLoaderCMD: {
-				cmd: this.config.get('updateLoaderCMD').cmd,
-				args: Object.values(this.config.get('updateLoaderCMD').args)
-			},
-			updateIndexJs: {
-				cmd: this.config.get('updateIndexJsCMD').cmd,
-				commandPath: this.config.get('updateIndexJsCMD').cliPath,
-			},
+			hookAfterChange: this.config.get('hookAfterChange'),
+			templates: this.config.get('componentsTemplates'),
 		};
 
 		this.getComponent = function (name) {
@@ -131,42 +105,34 @@ module.exports = class extends Generator {
 			},
 			{
 				type: 'checkbox',
-				message: 'What templates do you need?',
+				message: 'Which templates do you need?',
 				name: 'templates',
-				choices: templateOptions
+				choices: this.componentSettings.templates
 			},
 			{
 				type: 'confirm',
-				message: `May I update the _components.scss for you?`,
-				name: 'updateLoader',
-				default: true,
-				when: function (response) {
-					return response.templates.includes('scss')
-				}
+				message: `May I run some magic for you (the commands configured in "hookAfterChange")?`,
+				name: 'runHookAfterChange',
+				default: true
 			},
-			{
-				type: 'confirm',
-				message: `May I update index.js for you?`,
-				name: 'updateIndex',
-				default: true,
-				when: function (response) {
-					return response.templates.includes('js');
-				}
-			}
 		];
 
 		return this.prompt(initialPrompts).then(props => {
 			this.component = {
 				name: props.name,
+				label: this.titleCase(props.name),
 				filename: this.handlePrefixing(props.name, props.type),
 				type: props.type,
+				className: this.handlePrefixing(props.name, props.type),
 				modifiers: props.modifiers,
+				hasJS: props.templates.includes('js'),
 				templates: props.templates,
-				updateLoader: props.updateLoader,
-				updateIndex: props.updateIndex,
+				runHookAfterChange: props.runHookAfterChange,
 				path: `${this.componentSettings.path}/${
 					this.getComponent(props.type).path
-				}/${this.handlePrefixing(props.name, props.type)}/`
+				}/${this.handlePrefixing(props.name, props.type)}/`,
+				// relative path that could be used to update a loader file for example
+				typePath: this.getComponent(props.type).path
 			};
 		});
 	}
@@ -174,81 +140,54 @@ module.exports = class extends Generator {
 	writing() {
 		this.log(chalk.red('\nSit tight...\n'));
 
-		// Twig
-		if (this.component.templates.includes('twig')) {
-			this.fs.copyTpl(
-				this.templatePath('_component.twig'),
-				this.destinationPath(`${this.component.path}/${this.component.filename}.twig`), {
-					name: this.component.name,
-					className: this.handlePrefixing(this.component.name, this.component.type),
-					data: this.component.templates.includes('js') ? `data-${this.component.name}` : null
-				}
-			);
-		}
+		this.componentSettings.templates.forEach((tpl) => {
+			// bail if template not selected by user
+			if (!this.component.templates.includes(tpl.name)) return;
 
-		// Scss
-		if (this.component.templates.includes('scss')) {
-			this.fs.copyTpl(
-				this.templatePath('_component.scss'),
-				this.destinationPath(`${this.component.path}/_${this.component.filename}.scss`), {
-					name: this.component.name,
-					className: this.handlePrefixing(this.component.name, this.component.type),
-					modifiers: this.component.modifiers
-				}
-			);
-		}
+			// get filename from source, replace _component by component name
+			let filename = tpl.path.split('/');
+			filename = filename[filename.length-1].replace('_component', `_${this.component.filename}`);
 
-		// Config
-		if (this.component.templates.includes('config')) {
+			// copy template
 			this.fs.copyTpl(
-				this.templatePath('_component.config.js'),
-				this.destinationPath(
-					`${this.component.path}/${this.component.filename}.config.js`
-				), {
-					label: this.component.name.charAt(0).toUpperCase() + this.component.name.slice(1),
-					className: this.handlePrefixing(this.component.name, this.component.type),
-					modifiers: this.component.modifiers,
-					data: this.component.templates.includes('js') ? this.component.name : ''
-				}
+				this.destinationPath(tpl.path),
+				this.destinationPath(`${this.component.path}/${filename}`),
+				this.component
 			);
-		}
-
-		// Js
-		if (this.component.templates.includes('js')) {
-			this.fs.copyTpl(
-				this.templatePath('_component.js'),
-				this.destinationPath(`${this.component.path}/${this.component.filename}.js`), {
-					name: this.titleCase(this.component.name)
-				}
-			);
-		}
-
-		// Readme
-		if (this.component.templates.includes('readme')) {
-			this.fs.copyTpl(
-				this.templatePath('_README.md'),
-				this.destinationPath(`${this.component.path}/README.md`), {
-					name: this.titleCase(this.component.name),
-				}
-			);
-		}
+		});
 	}
 
 	end() {
-		if (this.component.updateLoader) {
-			this.log(chalk.red('\nUpdating _components.scss...\n'));
-			this.spawnCommandSync(
-				this.componentSettings.updateLoaderCMD.cmd,
-				this.componentSettings.updateLoaderCMD.args
-			)
+
+		// run hook: afterChange
+		if (this.component.runHookAfterChange && this.componentSettings.hookAfterChange) {
+			this.componentSettings.hookAfterChange.forEach(hook => {
+				// vars
+				const cmd = hook.cmd;
+
+				// replace dynamic args
+				// ex: `<%= name %>` will be replaced with the name of the component
+				const args_re = new RegExp(`(\<\%\=\s+)(${Object.keys(hook.args).join('|')})(\s+\%\>)`, 'gi');
+				const args = !hook.args ? [] : hook.args.map((arg) => {
+					return arg.replace(args_re, (match, prefix, key, suffix) => {
+						return (
+							prefix // '<%= '
+							+ this.component[key[2]] // the value
+							+ suffix // ' %>'
+						);
+					});
+				});
+
+				// run command
+				this.log(chalk.red(`\nRunning hook '${cmd} ${args.join(' ')}'\n`));
+				this.spawnCommandSync(
+					cmd,
+					args
+				);
+			});
 		}
-		if (this.component.updateIndex) {
-			this.log(chalk.red('\nUpdating index.js...\n'));
-			this.spawnCommandSync(
-				this.componentSettings.updateIndexJs.cmd,
-				[this.componentSettings.updateIndexJs.commandPath, this.getComponent(this.component.type).path, this.component.name]
-			)
-		}
+
+		// done!
 		this.log(yosay(`\n\n${chalk.green('Sweet!')} ${humorize.sayGoodbye()}\n`));
 	}
 };

@@ -1,6 +1,6 @@
 {
   "name": "generator-fractal-component",
-  "version": "0.0.6",
+  "version": "1.0.0-alpha",
   "description": "Generates fractal component boilerplate",
   "author": {
     "name": "superhuit",

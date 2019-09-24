@@ -22,7 +22,7 @@ Create a `.yo-rc.json` file in the root of your project and set all the values a
     "componentsTemplates": [
       {
         "name": "twig",
-        "path": "./styleguide/templates/_component.twig",
+        "path": "./styleguide/templates/component.twig",
         "checked": true
       },
       {
@@ -32,16 +32,16 @@ Create a `.yo-rc.json` file in the root of your project and set all the values a
       },
       {
         "name": "config",
-        "path": "./styleguide/templates/_component.config.js",
+        "path": "./styleguide/templates/component.config.js",
         "checked": true
       },
       {
         "name": "js",
-        "path": "./styleguide/templates/_component.js"
+        "path": "./styleguide/templates/component.js"
       },
       {
         "name": "readme",
-        "path": "./styleguide/templates/_README.md"
+        "path": "./styleguide/templates/README.md"
       }
     ],
     "prefixComponents": false,

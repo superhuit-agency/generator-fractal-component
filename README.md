@@ -37,11 +37,11 @@ Create a `.yo-rc.json` file in the root of your project and set all the values a
       },
       {
         "name": "js",
-        "path": "./styleguide/templates/_component.js",
+        "path": "./styleguide/templates/_component.js"
       },
       {
         "name": "readme",
-        "path": "./styleguide/templates/_README.md",
+        "path": "./styleguide/templates/_README.md"
       }
     ],
     "prefixComponents": false,
@@ -56,7 +56,7 @@ Create a `.yo-rc.json` file in the root of your project and set all the values a
       {
         "cmd": "node",
         "args": [
-          "./cli/updateJsIndex.js",
+          "./cli/update-js-loader.js",
           "<%= typePath %>",
           "<%= name %>"
         ]

@@ -144,9 +144,9 @@ module.exports = class extends Generator {
 			// bail if template not selected by user
 			if (!this.component.templates.includes(tpl.name)) return;
 
-			// get filename from source, replace _component by component name
+			// get filename from source, replace "component" by component name
 			let filename = tpl.path.split('/');
-			filename = filename[filename.length-1].replace('_component', `_${this.component.filename}`);
+			filename = filename[filename.length-1].replace('component', `${this.component.filename}`);
 
 			// copy template
 			this.fs.copyTpl(
@@ -158,7 +158,6 @@ module.exports = class extends Generator {
 	}
 
 	end() {
-
 		// run hook: afterChange
 		if (this.component.runHookAfterChange && this.componentSettings.hookAfterChange) {
 			this.componentSettings.hookAfterChange.forEach(hook => {
@@ -167,9 +166,9 @@ module.exports = class extends Generator {
 
 				// replace dynamic args
 				// ex: `<%= name %>` will be replaced with the name of the component
-				const args_re = new RegExp(`(\<\%\=\s+)(${Object.keys(this.component).join('|')})(\s+\%\>)`, 'gi');
+				const args_re = new RegExp("(\\<\\%\\=\\s+)(" + Object.keys(this.component).join('|') + ")(\\s+\\%\\>)", 'gi');
 				const args = !hook.args ? [] : hook.args.map((arg) => {
-					return arg.replace(args_re, (match, prefix, key, suffix) => this.component[key[2]]);
+					return arg.replace(args_re, (match, prefix, key, suffix) => this.component[key]);
 				});
 
 				// run command

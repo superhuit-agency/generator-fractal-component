@@ -167,15 +167,9 @@ module.exports = class extends Generator {
 
 				// replace dynamic args
 				// ex: `<%= name %>` will be replaced with the name of the component
-				const args_re = new RegExp(`(\<\%\=\s+)(${Object.keys(hook.args).join('|')})(\s+\%\>)`, 'gi');
+				const args_re = new RegExp(`(\<\%\=\s+)(${Object.keys(this.component).join('|')})(\s+\%\>)`, 'gi');
 				const args = !hook.args ? [] : hook.args.map((arg) => {
-					return arg.replace(args_re, (match, prefix, key, suffix) => {
-						return (
-							prefix // '<%= '
-							+ this.component[key[2]] // the value
-							+ suffix // ' %>'
-						);
-					});
+					return arg.replace(args_re, (match, prefix, key, suffix) => this.component[key[2]]);
 				});
 
 				// run command
